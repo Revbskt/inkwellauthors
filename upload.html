@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Upload Book | InkWell</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header><h1>📤 Upload a New Book</h1></header>
+  <main>
+    <form id="uploadForm">
+      <label>Title <input type="text" name="title" required /></label>
+      <label>Description <textarea name="description" required></textarea></label>
+      <label>Cover Image <input type="file" name="cover_image" accept="image/*" required /></label>
+      <label>EPUB File <input type="file" name="epub_file" accept=".epub" required /></label>
+      <button type="submit">Upload Book</button>
+    </form>
+    <p id="uploadStatus"></p>
+  </main>
+  <script src="app.js"></script>
+</body>
+</html>
