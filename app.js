@@ -1,4 +1,4 @@
-const xanoBase = "https://YOUR-XANO-URL/api/v1";
+const xanoBase = "https://x8ki-letl-twmt.n7.xano.io/api:tQZ1d1bJ";
 
 const uploadForm = document.getElementById("uploadForm");
 if (uploadForm) {
