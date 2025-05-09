@@ -1,5 +1,5 @@
-const xanoUploadEndpoint = "https://YOUR-XANO-URL/api/v1/book/upload";
-const xanoGetBooksEndpoint = "https://YOUR-XANO-URL/api/v1/book/all";
+const xanoUploadEndpoint = "https://x8ki-letl-twmt.n7.xano.io/api:tQZ1d1bJ/book_category";
+const xanoGetBooksEndpoint = "https://x8ki-letl-twmt.n7.xano.io/api:tQZ1d1bJ/book_category";
 
 document.getElementById("bookForm").addEventListener("submit", async (e) => {
   e.preventDefault();
