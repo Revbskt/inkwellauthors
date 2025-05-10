@@ -97,6 +97,29 @@
       font-size: 0.9rem;
       color: #aaa;
     }
+
+    @media (max-width: 480px) {
+      .hero h1 {
+        font-size: 2rem;
+      }
+      .hero p,
+      .feature p {
+        font-size: 1rem;
+      }
+      header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .button-group {
+        justify-content: flex-start;
+        width: 100%;
+        margin-top: 1rem;
+      }
+      .features {
+        padding: 1rem;
+        gap: 1rem;
+      }
+    }
   </style>
 </head>
 <body>
