@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>InkWell Dashboard</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Georgia', serif;
+      background: #1e1e1e;
+      color: white;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem;
+      min-height: 100vh;
+      box-sizing: border-box;
+      text-align: center;
+    }
+    h1 {
+      font-size: 2.5rem;
+      margin-bottom: 1rem;
+    }
+    p {
+      font-size: 1.2rem;
+      margin-bottom: 2rem;
+    }
+    .logout {
+      margin-top: 2rem;
+      padding: 0.75rem 1.5rem;
+      font-size: 1rem;
+      border: none;
+      border-radius: 5px;
+      background-color: #ff3366;
+      color: white;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    .logout:hover {
+      background-color: #ff6699;
+    }
+    .books {
+      margin-top: 3rem;
+    }
+    .book {
+      margin: 1rem 0;
+    }
+  </style>
+</head>
+<body>
+  <h1>Welcome to Your Library</h1>
+  <p id="user-info">Authenticating...</p>
+
+  <div class="books">
+    <h2>Your Books</h2>
+    <div id="book-list">
+      <p>Loading books...</p>
+    </div>
+  </div>
+
+  <button class="logout" onclick="logout()">Logout</button>
+
+  <script>
+    const token = localStorage.getItem('authToken');
+
+    if (!token) {
+      window.location.href = '/index.html';
+    }
+
+    async function fetchUser() {
+      try {
+        const res = await fetch('https://x8ki-letl-twmt.n7.xano.io/api:4XT382Zx/auth/me', {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
+
+        if (!res.ok) throw new Error('Not authorized');
+        const user = await res.json();
+        document.getElementById('user-info').textContent = `Logged in as: ${user.email || 'User'}`;
+      } catch (err) {
+        document.getElementById('user-info').textContent = 'Unable to fetch user info.';
+      }
+    }
+
+    async function fetchBooks() {
+      try {
+        const res = await fetch('https://x8ki-letl-twmt.n7.xano.io/api:4XT382Zx/books', {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
+
+        const books = await res.json();
+        const list = document.getElementById('book-list');
+        list.innerHTML = '';
+
+        if (books.length === 0) {
+          list.innerHTML = '<p>No books yet.</p>';
+        } else {
+          books.forEach(book => {
+            const div = document.createElement('div');
+            div.className = 'book';
+            div.textContent = book.title || 'Untitled Book';
+            list.appendChild(div);
+          });
+        }
+      } catch (err) {
+        document.getElementById('book-list').innerHTML = '<p>Error loading books.</p>';
+      }
+    }
+
+    function logout() {
+      localStorage.removeItem('authToken');
+      window.location.href = '/index.html';
+    }
+
+    fetchUser();
+    fetchBooks();
+  </script>
+</body>
+</html>
