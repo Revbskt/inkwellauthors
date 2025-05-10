@@ -22,9 +22,18 @@
       font-size: 2.5rem;
       margin-bottom: 1rem;
     }
-    p {
+    .stats {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 2rem;
+      margin: 2rem 0;
+    }
+    .stat {
+      background: #2c2c2c;
+      padding: 1rem 2rem;
+      border-radius: 8px;
       font-size: 1.2rem;
-      margin-bottom: 2rem;
     }
     .logout {
       margin-top: 2rem;
@@ -40,75 +49,61 @@
     .logout:hover {
       background-color: #ff6699;
     }
-    .books {
-      margin-top: 3rem;
-    }
-    .book {
-      margin: 1rem 0;
-    }
   </style>
 </head>
 <body>
-  <h1>Welcome to Your Library</h1>
+  <h1>Welcome to Your Dashboard</h1>
   <p id="user-info">Authenticating...</p>
 
-  <div class="books">
-    <h2>Your Books</h2>
-    <div id="book-list">
-      <p>Loading books...</p>
-    </div>
+  <div class="stats">
+    <div class="stat" id="pages">📄 Pages Read: ...</div>
+    <div class="stat" id="chapters">📘 Chapters Read: ...</div>
+    <div class="stat" id="sessions">🕒 Sessions: ...</div>
+    <div class="stat" id="avgTime">⏱ Avg. Time: ...</div>
+    <div class="stat" id="dropoff">📉 Drop-off Chapter: ...</div>
   </div>
 
   <button class="logout" onclick="logout()">Logout</button>
 
   <script>
     const token = localStorage.getItem('authToken');
-
-    if (!token) {
-      window.location.href = '/index.html';
-    }
+    if (!token) window.location.href = '/index.html';
 
     async function fetchUser() {
       try {
         const res = await fetch('https://x8ki-letl-twmt.n7.xano.io/api:4XT382Zx/auth/me', {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
+          headers: { Authorization: `Bearer ${token}` }
         });
-
-        if (!res.ok) throw new Error('Not authorized');
         const user = await res.json();
-        document.getElementById('user-info').textContent = `Logged in as: ${user.email || 'User'}`;
-      } catch (err) {
-        document.getElementById('user-info').textContent = 'Unable to fetch user info.';
+        document.getElementById('user-info').textContent = `Logged in as: ${user.email}`;
+      } catch {
+        document.getElementById('user-info').textContent = 'Could not load user info.';
       }
     }
 
-    async function fetchBooks() {
-      try {
-        const res = await fetch('https://x8ki-letl-twmt.n7.xano.io/api:4XT382Zx/books', {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        });
+    async function fetchAnalytics() {
+      const [analyticsRes, sessionRes] = await Promise.all([
+        fetch('https://x8ki-letl-twmt.n7.xano.io/api:Vv6qlThI/reading_analytic', { headers: { Authorization: `Bearer ${token}` } }),
+        fetch('https://x8ki-letl-twmt.n7.xano.io/api:Vv6qlThI/reading_session', { headers: { Authorization: `Bearer ${token}` } })
+      ]);
+      const analytics = await analyticsRes.json();
+      const sessions = await sessionRes.json();
 
-        const books = await res.json();
-        const list = document.getElementById('book-list');
-        list.innerHTML = '';
+      const pages = analytics.reduce((sum, row) => sum + (row.page_number || 0), 0);
+      const chapters = new Set(analytics.map(r => r.chapter)).size;
+      const dropoffs = analytics.reduce((map, row) => {
+        const ch = row.chapter || 'Unknown';
+        map[ch] = (map[ch] || 0) + 1;
+        return map;
+      }, {});
+      const mostDropped = Object.entries(dropoffs).sort((a,b) => b[1]-a[1])[0]?.[0] || 'N/A';
+      const avgTime = sessions.length ? Math.round(sessions.reduce((t,s) => t + (s.duration_seconds || 0), 0) / sessions.length) : 0;
 
-        if (books.length === 0) {
-          list.innerHTML = '<p>No books yet.</p>';
-        } else {
-          books.forEach(book => {
-            const div = document.createElement('div');
-            div.className = 'book';
-            div.textContent = book.title || 'Untitled Book';
-            list.appendChild(div);
-          });
-        }
-      } catch (err) {
-        document.getElementById('book-list').innerHTML = '<p>Error loading books.</p>';
-      }
+      document.getElementById('pages').textContent = `📄 Pages Read: ${pages}`;
+      document.getElementById('chapters').textContent = `📘 Chapters Read: ${chapters}`;
+      document.getElementById('sessions').textContent = `🕒 Sessions: ${sessions.length}`;
+      document.getElementById('avgTime').textContent = `⏱ Avg. Time: ${avgTime} sec`;
+      document.getElementById('dropoff').textContent = `📉 Drop-off Chapter: ${mostDropped}`;
     }
 
     function logout() {
@@ -117,7 +112,7 @@
     }
 
     fetchUser();
-    fetchBooks();
+    fetchAnalytics();
   </script>
 </body>
 </html>
