@@ -152,11 +152,11 @@
     }
 
     function validateEmail(email) {
-      return /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email);
+      return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email); // ✅ Correct regex
     }
 
     async function loginUser() {
-      const email = document.getElementById('login-email').value.trim(); // Trimmed
+      const email = document.getElementById('login-email').value.trim();
       const password = document.getElementById('login-password').value;
 
       if (!validateEmail(email) || !password) {
@@ -180,7 +180,7 @@
     }
 
     async function signupUser() {
-      const email = document.getElementById('signup-email').value.trim(); // Trimmed
+      const email = document.getElementById('signup-email').value.trim();
       const password = document.getElementById('signup-password').value;
       const confirm = document.getElementById('signup-confirm').value;
 
