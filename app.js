@@ -1,48 +1,171 @@
-const xanoBase = "https://x8ki-letl-twmt.n7.xano.io/api:tQZ1d1bJ";
-
-const uploadForm = document.getElementById("uploadForm");
-if (uploadForm) {
-  uploadForm.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const formData = new FormData(uploadForm);
-    const res = await fetch(`${xanoBase}/book`, {
-      method: "POST",
-      body: formData,
-    });
-    const status = document.getElementById("uploadStatus");
-    if (res.ok) {
-      status.textContent = "✅ Book uploaded successfully!";
-      uploadForm.reset();
-    } else {
-      status.textContent = "❌ Upload failed. Check the fields.";
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>InkWell Reader</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Georgia', serif;
+      background: linear-gradient(to bottom, #1e1e1e, #3b3b3b);
+      color: white;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 2rem;
+      box-sizing: border-box;
+      text-align: center;
     }
-  });
-}
+    h1 {
+      font-size: 3rem;
+      margin-bottom: 0.5rem;
+    }
+    p {
+      font-size: 1.2rem;
+      max-width: 600px;
+      margin-bottom: 2rem;
+    }
+    .button-group {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    button {
+      padding: 0.75rem 1.5rem;
+      font-size: 1rem;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      background-color: #ff3366;
+      color: white;
+      transition: background 0.3s;
+    }
+    button:hover {
+      background-color: #ff6699;
+    }
+    @media (max-width: 600px) {
+      h1 {
+        font-size: 2rem;
+      }
+      p {
+        font-size: 1rem;
+      }
+      button {
+        font-size: 0.9rem;
+        width: 100%;
+      }
+    }
+    .hidden-form {
+      display: none;
+      margin-top: 1rem;
+      flex-direction: column;
+      gap: 0.5rem;
+      align-items: center;
+    }
+    .hidden-form input {
+      padding: 0.5rem;
+      font-size: 1rem;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+      width: 250px;
+    }
+  </style>
+</head>
+<body>
+  <h1>InkWell Reader</h1>
+  <p>A sensual, elegant platform for steamy romance and immersive storytelling. Dive in.</p>
+  <div class="button-group">
+    <button onclick="toggleForm('login')">Login</button>
+    <button onclick="toggleForm('signup')">Join Now</button>
+  </div>
 
-const bookList = document.getElementById("bookList");
-if (bookList) {
-  fetch(`${xanoBase}/book/all`)
-    .then(res => res.json())
-    .then(data => {
-      if (!Array.isArray(data)) {
-        bookList.innerHTML = "<p>No books available.</p>";
+  <div id="login-form" class="hidden-form">
+    <input type="email" id="login-email" placeholder="Email">
+    <input type="password" id="login-password" placeholder="Password">
+    <button onclick="loginUser()">Submit Login</button>
+  </div>
+
+  <div id="signup-form" class="hidden-form">
+    <input type="email" id="signup-email" placeholder="Email">
+    <input type="password" id="signup-password" placeholder="Password">
+    <input type="password" id="signup-confirm" placeholder="Confirm Password">
+    <button onclick="signupUser()">Submit Signup</button>
+  </div>
+
+  <script>
+    function toggleForm(type) {
+      document.getElementById('login-form').style.display = (type === 'login') ? 'flex' : 'none';
+      document.getElementById('signup-form').style.display = (type === 'signup') ? 'flex' : 'none';
+    }
+
+    function validateEmail(email) {
+      return /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email);
+    }
+
+    async function loginUser() {
+      const email = document.getElementById('login-email').value;
+      const password = document.getElementById('login-password').value;
+
+      if (!validateEmail(email) || !password) {
+        alert("Please enter a valid email and password.");
         return;
       }
-      bookList.innerHTML = "";
-      data.forEach(book => {
-        const el = document.createElement("div");
-        el.className = "book";
-        el.innerHTML = `
-          <h2>${book.title}</h2>
-          <p>${book.description}</p>
-          ${book.cover_image ? `<img src="${book.cover_image}" alt="Cover" />` : ""}
-          ${book.epub_file ? `<p><a href="${book.epub_file}" target="_blank">Download EPUB</a></p>` : ""}
-        `;
-        bookList.appendChild(el);
+
+      const res = await fetch('https://x8ki-letl-twmt.n7.xano.io/api:4XT382Zx/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ email, password })
       });
-    })
-    .catch(err => {
-      bookList.innerHTML = "<p>Failed to load books.</p>";
-      console.error(err);
-    });
-}
+
+      const data = await res.json();
+      if (res.ok && data.authToken) {
+        localStorage.setItem('authToken', data.authToken);
+        window.location.href = '/dashboard.html';
+      } else {
+        alert(data.message || "Login failed.");
+      }
+    }
+
+    async function signupUser() {
+      const email = document.getElementById('signup-email').value;
+      const password = document.getElementById('signup-password').value;
+      const confirm = document.getElementById('signup-confirm').value;
+
+      if (!validateEmail(email)) {
+        alert("Enter a valid email.");
+        return;
+      }
+      if (!password || password.length < 6) {
+        alert("Password must be at least 6 characters.");
+        return;
+      }
+      if (password !== confirm) {
+        alert("Passwords do not match.");
+        return;
+      }
+
+      const res = await fetch('https://x8ki-letl-twmt.n7.xano.io/api:4XT382Zx/auth/signup', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ email, password })
+      });
+
+      const data = await res.json();
+      if (res.ok && data.authToken) {
+        localStorage.setItem('authToken', data.authToken);
+        window.location.href = '/dashboard.html';
+      } else {
+        alert(data.message || "Signup failed.");
+      }
+    }
+  </script>
+</body>
+</html>
