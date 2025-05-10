@@ -3,24 +3,37 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>InkWell Author</title>
+  <title>InkWell Reader</title>
   <style>
     body {
       margin: 0;
       font-family: 'Georgia', serif;
-      background: linear-gradient(to bottom, #1a1a1a, #2c2c2c);
+      background: linear-gradient(to bottom, #141414, #2c2c2c);
       color: white;
       display: flex;
       flex-direction: column;
       align-items: center;
       min-height: 100vh;
+      overflow-x: hidden;
+    }
+    header {
+      width: 100%;
+      padding: 1.5rem 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background-color: #1e1e1e;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+    }
+    header img {
+      height: 40px;
     }
     .hero {
-      padding: 5rem 2rem 3rem;
+      padding: 4rem 2rem 2rem;
       text-align: center;
     }
     .hero h1 {
-      font-size: 3.5rem;
+      font-size: 3rem;
       margin-bottom: 1rem;
     }
     .hero p {
@@ -48,6 +61,21 @@
     button:hover {
       background-color: #ff6699;
     }
+    .features {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 2rem;
+      padding: 2rem;
+      max-width: 900px;
+      margin: 2rem auto;
+      text-align: center;
+    }
+    .feature {
+      background-color: #222;
+      padding: 1.5rem;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.3);
+    }
     .hidden-form {
       display: none;
       margin-top: 2rem;
@@ -62,31 +90,60 @@
       border: 1px solid #ccc;
       width: 250px;
     }
+    footer {
+      margin-top: auto;
+      padding: 1rem;
+      text-align: center;
+      font-size: 0.9rem;
+      color: #aaa;
+    }
   </style>
 </head>
 <body>
-  <div class="hero">
-    <h1>InkWell Reader</h1>
-    <p>Steamy romance meets smart analytics. Empowering authors. Elevating stories.</p>
-
+  <header>
+    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/3f/Feather_pen_icon.svg/120px-Feather_pen_icon.svg.png" alt="InkWell Logo">
     <div class="button-group">
       <button onclick="toggleForm('login')">Login</button>
       <button onclick="toggleForm('signup')">Join Now</button>
     </div>
+  </header>
+
+  <section class="hero">
+    <h1>InkWell Reader</h1>
+    <p>Steamy romance meets smart analytics. Empowering authors. Elevating stories.</p>
 
     <div id="login-form" class="hidden-form">
-      <input type="email" id="login-email" placeholder="Email" />
-      <input type="password" id="login-password" placeholder="Password" />
+      <input type="email" id="login-email" placeholder="Email">
+      <input type="password" id="login-password" placeholder="Password">
       <button onclick="loginUser()">Submit Login</button>
     </div>
 
     <div id="signup-form" class="hidden-form">
-      <input type="email" id="signup-email" placeholder="Email" />
-      <input type="password" id="signup-password" placeholder="Password" />
-      <input type="password" id="signup-confirm" placeholder="Confirm Password" />
+      <input type="email" id="signup-email" placeholder="Email">
+      <input type="password" id="signup-password" placeholder="Password">
+      <input type="password" id="signup-confirm" placeholder="Confirm Password">
       <button onclick="signupUser()">Submit Signup</button>
     </div>
-  </div>
+  </section>
+
+  <section class="features">
+    <div class="feature">
+      <h3>📈 Author Analytics</h3>
+      <p>Track engagement, drop-off, and revenue in real time.</p>
+    </div>
+    <div class="feature">
+      <h3>💖 Steamy Content</h3>
+      <p>Romance that captivates — curated for loyal fans and fresh voices.</p>
+    </div>
+    <div class="feature">
+      <h3>🛠️ Full Control</h3>
+      <p>You publish. You earn. We power your story with tools that matter.</p>
+    </div>
+  </section>
+
+  <footer>
+    &copy; 2025 InkWell Reader. All rights reserved.
+  </footer>
 
   <script>
     function toggleForm(type) {
