@@ -1,38 +1,39 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>InkWell Reader</title>
   <style>
     body {
       margin: 0;
       font-family: 'Georgia', serif;
-      background: linear-gradient(to bottom, #1e1e1e, #3b3b3b);
+      background: linear-gradient(to bottom, #1a1a1a, #2c2c2c);
       color: white;
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: center;
       min-height: 100vh;
-      padding: 2rem;
-      box-sizing: border-box;
+    }
+    .hero {
+      padding: 5rem 2rem 3rem;
       text-align: center;
     }
-    h1 {
-      font-size: 3rem;
-      margin-bottom: 0.5rem;
+    .hero h1 {
+      font-size: 3.5rem;
+      margin-bottom: 1rem;
     }
-    p {
+    .hero p {
       font-size: 1.2rem;
       max-width: 600px;
-      margin-bottom: 2rem;
+      margin: 0 auto 2rem;
     }
     .button-group {
       display: flex;
       gap: 1rem;
-      flex-wrap: wrap;
       justify-content: center;
+      margin-top: 2rem;
+      flex-wrap: wrap;
     }
     button {
       padding: 0.75rem 1.5rem;
@@ -47,21 +48,9 @@
     button:hover {
       background-color: #ff6699;
     }
-    @media (max-width: 600px) {
-      h1 {
-        font-size: 2rem;
-      }
-      p {
-        font-size: 1rem;
-      }
-      button {
-        font-size: 0.9rem;
-        width: 100%;
-      }
-    }
     .hidden-form {
       display: none;
-      margin-top: 1rem;
+      margin-top: 2rem;
       flex-direction: column;
       gap: 0.5rem;
       align-items: center;
@@ -76,24 +65,27 @@
   </style>
 </head>
 <body>
-  <h1>InkWell Reader</h1>
-  <p>A sensual, elegant platform for steamy romance and immersive storytelling. Dive in.</p>
-  <div class="button-group">
-    <button onclick="toggleForm('login')">Login</button>
-    <button onclick="toggleForm('signup')">Join Now</button>
-  </div>
+  <div class="hero">
+    <h1>InkWell Reader</h1>
+    <p>Steamy romance meets smart analytics. Empowering authors. Elevating stories.</p>
 
-  <div id="login-form" class="hidden-form">
-    <input type="email" id="login-email" placeholder="Email">
-    <input type="password" id="login-password" placeholder="Password">
-    <button onclick="loginUser()">Submit Login</button>
-  </div>
+    <div class="button-group">
+      <button onclick="toggleForm('login')">Login</button>
+      <button onclick="toggleForm('signup')">Join Now</button>
+    </div>
 
-  <div id="signup-form" class="hidden-form">
-    <input type="email" id="signup-email" placeholder="Email">
-    <input type="password" id="signup-password" placeholder="Password">
-    <input type="password" id="signup-confirm" placeholder="Confirm Password">
-    <button onclick="signupUser()">Submit Signup</button>
+    <div id="login-form" class="hidden-form">
+      <input type="email" id="login-email" placeholder="Email" />
+      <input type="password" id="login-password" placeholder="Password" />
+      <button onclick="loginUser()">Submit Login</button>
+    </div>
+
+    <div id="signup-form" class="hidden-form">
+      <input type="email" id="signup-email" placeholder="Email" />
+      <input type="password" id="signup-password" placeholder="Password" />
+      <input type="password" id="signup-confirm" placeholder="Confirm Password" />
+      <button onclick="signupUser()">Submit Signup</button>
+    </div>
   </div>
 
   <script>
@@ -103,14 +95,12 @@
     }
 
     function validateEmail(email) {
-      return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+      return /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email);
     }
 
     async function loginUser() {
       const email = document.getElementById('login-email').value.trim();
       const password = document.getElementById('login-password').value;
-
-      console.log('Login Email:', email);
 
       if (!validateEmail(email) || !password) {
         alert("Please enter a valid email and password.");
@@ -119,9 +109,7 @@
 
       const res = await fetch('https://x8ki-letl-twmt.n7.xano.io/api:4XT382Zx/auth/login', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password })
       });
 
@@ -139,8 +127,6 @@
       const password = document.getElementById('signup-password').value;
       const confirm = document.getElementById('signup-confirm').value;
 
-      console.log('Signup Email:', email);
-
       if (!validateEmail(email)) {
         alert("Enter a valid email.");
         return;
@@ -156,9 +142,7 @@
 
       const res = await fetch('https://x8ki-letl-twmt.n7.xano.io/api:4XT382Zx/auth/signup', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password })
       });
 
