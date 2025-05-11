@@ -16,6 +16,31 @@
       text-align: center;
       margin-bottom: 1rem;
     }
+    .analytics {
+      display: flex;
+      justify-content: center;
+      gap: 2rem;
+      flex-wrap: wrap;
+      margin: 1rem auto 2rem;
+      max-width: 900px;
+    }
+    .stat {
+      background: #1e1e1e;
+      padding: 1rem 1.5rem;
+      border-radius: 8px;
+      text-align: center;
+      flex: 1;
+      min-width: 120px;
+    }
+    .stat h3 {
+      margin: 0;
+      font-size: 1.4rem;
+    }
+    .stat p {
+      margin: 0.25rem 0 0;
+      font-size: 1rem;
+      color: #aaa;
+    }
     .filter {
       max-width: 800px;
       margin: 1rem auto 2rem;
@@ -97,6 +122,29 @@
 <body>
   <h1>📚 Your Books</h1>
 
+  <div class="analytics">
+    <div class="stat">
+      <h3 id="pagesRead">0</h3>
+      <p>Pages Read</p>
+    </div>
+    <div class="stat">
+      <h3 id="chaptersRead">0%</h3>
+      <p>Chapters Completed</p>
+    </div>
+    <div class="stat">
+      <h3 id="earnings">$0.00</h3>
+      <p>Total Payout</p>
+    </div>
+  </div>
+
+  <section style="max-width: 900px; margin: 2rem auto;">
+    <h2 style="font-size: 1.3rem; margin-bottom: 1rem;">📅 Monthly Earnings</h2>
+    <ul id="monthlyEarnings" style="list-style: none; padding: 0; font-size: 1rem;"></ul>
+
+    <h2 style="font-size: 1.3rem; margin: 2rem 0 1rem;">📚 Earnings by Book</h2>
+    <ul id="bookEarnings" style="list-style: none; padding: 0; font-size: 1rem;"></ul>
+  </section>
+
   <div class="filter">
     <label for="statusFilter">Filter by status: </label>
     <select id="statusFilter">
@@ -165,6 +213,36 @@
       }
     }
 
+    async function fetchAnalytics() {
+      const token = localStorage.getItem("authToken");
+      try {
+        const res = await fetch("https://x8ki-letl-twmt.n7.xano.io/api:Vv6qlThI/reading_analytic", {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        const data = await res.json();
+
+        let totalPages = 0;
+        let totalChapters = 0;
+        let chaptersRead = 0;
+
+        data.forEach(row => {
+          if (row.pages_read) totalPages += row.pages_read;
+          if (row.total_chapters && row.chapters_completed) {
+            totalChapters += row.total_chapters;
+            chaptersRead += row.chapters_completed;
+          }
+        });
+
+        const percentRead = totalChapters ? Math.round((chaptersRead / totalChapters) * 100) : 0;
+
+        document.getElementById("pagesRead").textContent = totalPages.toLocaleString();
+        document.getElementById("chaptersRead").textContent = `${percentRead}%`;
+        document.getElementById("earnings").textContent = "${totalPayout.toFixed(2)}"; // placeholder for payout integration
+      } catch (err) {
+        console.error("Analytics fetch failed");
+      }
+    }
+
     document.getElementById("statusFilter").addEventListener("change", renderBooks);
 
     function logout() {
@@ -173,6 +251,53 @@
     }
 
     fetchBooks();
+    fetchAnalytics();
+    fetchPayout();
+  
+    async function fetchPayout() {
+      const token = localStorage.getItem("authToken");
+      try {
+        const res = await fetch("https://x8ki-letl-twmt.n7.xano.io/api:Vv6qlThI/author_payout", {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        const data = await res.json();
+        let totalPayout = 0;
+        data.forEach(payout => {
+          if (payout.amount) totalPayout += payout.amount;
+        });
+        document.getElementById("earnings").textContent = "$" + totalPayout.toFixed(2);
+
+        // Monthly breakdown
+        const byMonth = {};
+        data.forEach(p => {
+          const date = new Date(p.created_at);
+          const label = date.toLocaleString('default', { month: 'short', year: 'numeric' });
+          byMonth[label] = (byMonth[label] || 0) + (p.amount || 0);
+        });
+        const monthlyList = document.getElementById("monthlyEarnings");
+        for (const month in byMonth) {
+          const li = document.createElement("li");
+          li.textContent = `${month}: $${byMonth[month].toFixed(2)}`;
+          monthlyList.appendChild(li);
+        }
+
+        // Book earnings (requires books loaded)
+        const byBook = {};
+        data.forEach(p => {
+          if (p.book_id) byBook[p.book_id] = (byBook[p.book_id] || 0) + (p.amount || 0);
+        });
+        const bookList = document.getElementById("bookEarnings");
+        allBooks.forEach(book => {
+          if (byBook[book.id]) {
+            const li = document.createElement("li");
+            li.textContent = `${book.title}: $${byBook[book.id].toFixed(2)}`;
+            bookList.appendChild(li);
+          }
+        });
+      } catch (err) {
+        console.error("Payout fetch failed");
+      }
+    }
   </script>
 </body>
 </html>
