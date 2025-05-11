@@ -3,116 +3,126 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>InkWell Dashboard</title>
+  <title>Dashboard – InkWell</title>
   <style>
     body {
       margin: 0;
-      font-family: 'Georgia', serif;
-      background: #1e1e1e;
+      font-family: Georgia, serif;
+      background-color: #121212;
       color: white;
       display: flex;
       flex-direction: column;
       align-items: center;
       padding: 2rem;
-      min-height: 100vh;
-      box-sizing: border-box;
-      text-align: center;
     }
     h1 {
-      font-size: 2.5rem;
-      margin-bottom: 1rem;
+      font-size: 2rem;
+      margin-bottom: 1.5rem;
     }
-    .stats {
+    form {
       display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 2rem;
-      margin: 2rem 0;
+      flex-direction: column;
+      gap: 1rem;
+      background-color: #1e1e1e;
+      padding: 2rem;
+      border-radius: 10px;
+      max-width: 600px;
+      width: 100%;
+      box-shadow: 0 0 10px rgba(0,0,0,0.4);
     }
-    .stat {
-      background: #2c2c2c;
-      padding: 1rem 2rem;
-      border-radius: 8px;
-      font-size: 1.2rem;
+    input[type="text"],
+    input[type="file"] {
+      padding: 0.75rem;
+      font-size: 1rem;
+      border-radius: 5px;
+      border: none;
+      width: 100%;
     }
-    .logout {
-      margin-top: 2rem;
-      padding: 0.75rem 1.5rem;
+    button {
+      padding: 0.75rem;
       font-size: 1rem;
       border: none;
       border-radius: 5px;
       background-color: #ff3366;
       color: white;
       cursor: pointer;
-      transition: background 0.3s;
     }
-    .logout:hover {
+    button:hover {
       background-color: #ff6699;
+    }
+    #uploadStatus {
+      text-align: center;
+      margin-top: 1rem;
+      font-size: 1rem;
+    }
+    @media (max-width: 480px) {
+      body {
+        padding: 1rem;
+      }
+      h1 {
+        font-size: 1.5rem;
+      }
+      form {
+        padding: 1rem;
+      }
     }
   </style>
 </head>
 <body>
-  <h1>Welcome to Your Dashboard</h1>
-  <p id="user-info">Authenticating...</p>
+  <h1>📚 Upload a New Book</h1>
+  <form id="uploadForm" enctype="multipart/form-data">
+    <input type="text" id="title" placeholder="Book Title" required>
 
-  <div class="stats">
-    <div class="stat" id="pages">📄 Pages Read: ...</div>
-    <div class="stat" id="chapters">📘 Chapters Read: ...</div>
-    <div class="stat" id="sessions">🕒 Sessions: ...</div>
-    <div class="stat" id="avgTime">⏱ Avg. Time: ...</div>
-    <div class="stat" id="dropoff">📉 Drop-off Chapter: ...</div>
-  </div>
+    <label for="coverImage">Cover Image</label>
+    <input type="file" id="coverImage" accept="image/*" required>
 
-  <button class="logout" onclick="logout()">Logout</button>
+    <label for="epubFile">EPUB File</label>
+    <input type="file" id="epubFile" accept=".epub" required>
+
+    <button type="submit">Upload Book</button>
+  </form>
+  <p id="uploadStatus"></p>
 
   <script>
-    const token = localStorage.getItem('authToken');
-    if (!token) window.location.href = '/index.html';
+    document.getElementById("uploadForm").addEventListener("submit", async function (e) {
+      e.preventDefault();
 
-    async function fetchUser() {
-      try {
-        const res = await fetch('https://x8ki-letl-twmt.n7.xano.io/api:4XT382Zx/auth/me', {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        const user = await res.json();
-        document.getElementById('user-info').textContent = `Logged in as: ${user.email}`;
-      } catch {
-        document.getElementById('user-info').textContent = 'Could not load user info.';
+      const title = document.getElementById("title").value.trim();
+      const epubFile = document.getElementById("epubFile").files[0];
+      const coverImage = document.getElementById("coverImage").files[0];
+      const token = localStorage.getItem("authToken");
+
+      if (!token) {
+        alert("You must be logged in to upload.");
+        return;
       }
-    }
 
-    async function fetchAnalytics() {
-      const [analyticsRes, sessionRes] = await Promise.all([
-        fetch('https://x8ki-letl-twmt.n7.xano.io/api:Vv6qlThI/reading_analytic', { headers: { Authorization: `Bearer ${token}` } }),
-        fetch('https://x8ki-letl-twmt.n7.xano.io/api:Vv6qlThI/reading_session', { headers: { Authorization: `Bearer ${token}` } })
-      ]);
-      const analytics = await analyticsRes.json();
-      const sessions = await sessionRes.json();
+      const formData = new FormData();
+      formData.append("title", title);
+      formData.append("epub_file_path", epubFile);
+      formData.append("cover_image_path", coverImage);
+      formData.append("status", "draft");
 
-      const pages = analytics.reduce((sum, row) => sum + (row.page_number || 0), 0);
-      const chapters = new Set(analytics.map(r => r.chapter)).size;
-      const dropoffs = analytics.reduce((map, row) => {
-        const ch = row.chapter || 'Unknown';
-        map[ch] = (map[ch] || 0) + 1;
-        return map;
-      }, {});
-      const mostDropped = Object.entries(dropoffs).sort((a,b) => b[1]-a[1])[0]?.[0] || 'N/A';
-      const avgTime = sessions.length ? Math.round(sessions.reduce((t,s) => t + (s.duration_seconds || 0), 0) / sessions.length) : 0;
+      try {
+        const res = await fetch("https://x8ki-letl-twmt.n7.xano.io/api:Vv6qlThI/book", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`
+          },
+          body: formData
+        });
 
-      document.getElementById('pages').textContent = `📄 Pages Read: ${pages}`;
-      document.getElementById('chapters').textContent = `📘 Chapters Read: ${chapters}`;
-      document.getElementById('sessions').textContent = `🕒 Sessions: ${sessions.length}`;
-      document.getElementById('avgTime').textContent = `⏱ Avg. Time: ${avgTime} sec`;
-      document.getElementById('dropoff').textContent = `📉 Drop-off Chapter: ${mostDropped}`;
-    }
-
-    function logout() {
-      localStorage.removeItem('authToken');
-      window.location.href = '/index.html';
-    }
-
-    fetchUser();
-    fetchAnalytics();
+        const data = await res.json();
+        if (res.ok) {
+          document.getElementById("uploadStatus").textContent = "✅ Book uploaded successfully!";
+          document.getElementById("uploadForm").reset();
+        } else {
+          document.getElementById("uploadStatus").textContent = data.message || "❌ Upload failed.";
+        }
+      } catch (err) {
+        document.getElementById("uploadStatus").textContent = "❌ Network or server error.";
+      }
+    });
   </script>
 </body>
 </html>
