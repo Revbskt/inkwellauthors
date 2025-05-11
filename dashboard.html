@@ -3,126 +3,176 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dashboard – InkWell</title>
+  <title>Author Dashboard – InkWell</title>
   <style>
     body {
       margin: 0;
+      padding: 2rem;
       font-family: Georgia, serif;
       background-color: #121212;
       color: white;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 2rem;
     }
     h1 {
-      font-size: 2rem;
-      margin-bottom: 1.5rem;
+      text-align: center;
+      margin-bottom: 1rem;
     }
-    form {
-      display: flex;
-      flex-direction: column;
-      gap: 1rem;
-      background-color: #1e1e1e;
-      padding: 2rem;
-      border-radius: 10px;
-      max-width: 600px;
-      width: 100%;
-      box-shadow: 0 0 10px rgba(0,0,0,0.4);
+    .filter {
+      max-width: 800px;
+      margin: 1rem auto 2rem;
+      text-align: right;
     }
-    input[type="text"],
-    input[type="file"] {
-      padding: 0.75rem;
+    .filter select {
+      padding: 0.5rem;
       font-size: 1rem;
       border-radius: 5px;
-      border: none;
-      width: 100%;
-    }
-    button {
-      padding: 0.75rem;
-      font-size: 1rem;
-      border: none;
-      border-radius: 5px;
-      background-color: #ff3366;
+      background: #1e1e1e;
       color: white;
+      border: 1px solid #555;
+    }
+    .book-list {
+      max-width: 800px;
+      margin: auto;
+    }
+    .book {
+      background: #1e1e1e;
+      padding: 1rem;
+      border-radius: 8px;
+      margin-bottom: 1rem;
+      box-shadow: 0 0 8px rgba(0,0,0,0.3);
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+    }
+    .book img {
+      width: 80px;
+      height: auto;
+      border-radius: 5px;
+      object-fit: cover;
+    }
+    .book-info h3 {
+      margin: 0 0 0.5rem;
+      font-size: 1.2rem;
+    }
+    .book-info p {
+      margin: 0;
+      font-size: 0.95rem;
+    }
+    .actions {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 2rem;
+    }
+    .actions a, .actions button {
+      background: #ff3366;
+      color: white;
+      padding: 0.5rem 1rem;
+      border-radius: 5px;
+      text-decoration: none;
+      font-weight: bold;
+      border: none;
       cursor: pointer;
     }
-    button:hover {
-      background-color: #ff6699;
-    }
-    #uploadStatus {
-      text-align: center;
-      margin-top: 1rem;
-      font-size: 1rem;
+    .actions a:hover, .actions button:hover {
+      background: #ff6699;
     }
     @media (max-width: 480px) {
       body {
         padding: 1rem;
       }
-      h1 {
-        font-size: 1.5rem;
+      .actions {
+        flex-direction: column;
+        gap: 1rem;
       }
-      form {
-        padding: 1rem;
+      .book {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .book img {
+        width: 100%;
+        max-width: 150px;
       }
     }
   </style>
 </head>
 <body>
-  <h1>📚 Upload a New Book</h1>
-  <form id="uploadForm" enctype="multipart/form-data">
-    <input type="text" id="title" placeholder="Book Title" required>
+  <h1>📚 Your Books</h1>
 
-    <label for="coverImage">Cover Image</label>
-    <input type="file" id="coverImage" accept="image/*" required>
+  <div class="filter">
+    <label for="statusFilter">Filter by status: </label>
+    <select id="statusFilter">
+      <option value="all">All</option>
+      <option value="draft">Draft</option>
+      <option value="published">Published</option>
+      <option value="archived">Archived</option>
+    </select>
+  </div>
 
-    <label for="epubFile">EPUB File</label>
-    <input type="file" id="epubFile" accept=".epub" required>
+  <div class="book-list" id="bookList">
+    <p>Loading your books...</p>
+  </div>
 
-    <button type="submit">Upload Book</button>
-  </form>
-  <p id="uploadStatus"></p>
+  <div class="actions">
+    <a href="upload.html">➕ Upload a New Book</a>
+    <button onclick="logout()">🚪 Logout</button>
+  </div>
 
   <script>
-    document.getElementById("uploadForm").addEventListener("submit", async function (e) {
-      e.preventDefault();
+    let allBooks = [];
 
-      const title = document.getElementById("title").value.trim();
-      const epubFile = document.getElementById("epubFile").files[0];
-      const coverImage = document.getElementById("coverImage").files[0];
+    async function fetchBooks() {
       const token = localStorage.getItem("authToken");
-
       if (!token) {
-        alert("You must be logged in to upload.");
+        window.location.href = "/index.html";
         return;
       }
 
-      const formData = new FormData();
-      formData.append("title", title);
-      formData.append("epub_file_path", epubFile);
-      formData.append("cover_image_path", coverImage);
-      formData.append("status", "draft");
-
       try {
         const res = await fetch("https://x8ki-letl-twmt.n7.xano.io/api:Vv6qlThI/book", {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${token}`
-          },
-          body: formData
+          headers: { Authorization: `Bearer ${token}` }
         });
 
         const data = await res.json();
-        if (res.ok) {
-          document.getElementById("uploadStatus").textContent = "✅ Book uploaded successfully!";
-          document.getElementById("uploadForm").reset();
-        } else {
-          document.getElementById("uploadStatus").textContent = data.message || "❌ Upload failed.";
-        }
+        allBooks = data.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+        renderBooks();
       } catch (err) {
-        document.getElementById("uploadStatus").textContent = "❌ Network or server error.";
+        document.getElementById("bookList").innerHTML = "<p>Error loading books.</p>";
       }
-    });
+    }
+
+    function renderBooks() {
+      const filter = document.getElementById("statusFilter").value;
+      const container = document.getElementById("bookList");
+      container.innerHTML = "";
+
+      const filtered = filter === "all" ? allBooks : allBooks.filter(b => b.status === filter);
+
+      if (filtered.length === 0) {
+        container.innerHTML = "<p>No books found for this filter.</p>";
+      } else {
+        filtered.forEach(book => {
+          const div = document.createElement("div");
+          div.className = "book";
+          const cover = book.cover_image_path ? `<img src="${book.cover_image_path}" alt="Cover">` : "";
+          div.innerHTML = `
+            ${cover}
+            <div class="book-info">
+              <h3>${book.title}</h3>
+              <p>Status: ${book.status}</p>
+            </div>
+          `;
+          container.appendChild(div);
+        });
+      }
+    }
+
+    document.getElementById("statusFilter").addEventListener("change", renderBooks);
+
+    function logout() {
+      localStorage.removeItem("authToken");
+      window.location.href = "/index.html";
+    }
+
+    fetchBooks();
   </script>
 </body>
 </html>
